@@ -9,7 +9,7 @@ import { registerServiceWorker, setupInstallPrompt, showInstallPrompt, isInstall
 import { calculateStreak } from './utils/analytics';
 
 // App version - must match service worker version
-const APP_VERSION = 'v2.0.0';
+const APP_VERSION = 'v1.0.0';
 
 // Default workout program based on the spreadsheet
 const defaultWorkouts = {
