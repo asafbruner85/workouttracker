@@ -1,6 +1,8 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'workout-tracker-v1';
+// Increment this version whenever you deploy changes
+const APP_VERSION = 'v2.0.0';
+const CACHE_NAME = `workout-tracker-${APP_VERSION}`;
 const urlsToCache = [
   '/',
   '/index.html',
@@ -8,6 +10,13 @@ const urlsToCache = [
   '/icon-192.svg',
   '/icon-512.svg'
 ];
+
+// Listen for skip waiting message
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
@@ -21,7 +30,8 @@ self.addEventListener('install', (event) => {
         console.error('Cache installation failed:', error);
       })
   );
-  self.skipWaiting();
+  // Don't automatically skip waiting - let the user decide
+  console.log(`Service Worker ${APP_VERSION} installed`);
 });
 
 // Fetch event - serve from cache, fallback to network

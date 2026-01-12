@@ -3,9 +3,13 @@ import { Unlock, Check, X, Edit3, Calendar, History, ChevronLeft, ChevronRight, 
 import LoginScreen from './components/LoginScreen';
 import ProgressDashboard from './components/ProgressDashboard';
 import ScheduleConfig from './components/ScheduleConfig';
+import UpdateNotification from './components/UpdateNotification';
 import { verifyPassword, getActivePasswordHash } from './utils/auth';
 import { registerServiceWorker, setupInstallPrompt, showInstallPrompt, isInstalled } from './utils/pwa';
 import { calculateStreak } from './utils/analytics';
+
+// App version - must match service worker version
+const APP_VERSION = 'v2.0.0';
 
 // Default workout program based on the spreadsheet
 const defaultWorkouts = {
@@ -1393,6 +1397,9 @@ export default function WorkoutTracker() {
   // Main app
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Update Notification */}
+      <UpdateNotification />
+
       {/* Progress Dashboard Modal */}
       {showProgressDashboard && (
         <ProgressDashboard
@@ -1422,7 +1429,10 @@ export default function WorkoutTracker() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <Dumbbell className="w-8 h-8 text-blue-500" />
-            <h1 className="text-xl font-bold">Workout Tracker</h1>
+            <div>
+              <h1 className="text-xl font-bold">Workout Tracker</h1>
+              <div className="text-xs text-gray-400">{APP_VERSION}</div>
+            </div>
             {saveStatus && (
               <span className="text-sm text-green-400 animate-pulse">{saveStatus}</span>
             )}
