@@ -1,23 +1,11 @@
 import React, { useState } from 'react';
 import { Calendar, Save, X, ArrowRight } from 'lucide-react';
+import { WORKOUT_TYPES } from '../constants/workoutTypes';
+import { DAYS_CONFIG } from '../constants/dates';
 
-const workoutTypes = [
-  { value: 'Strength', label: 'Strength Training', color: 'bg-blue-500', icon: '💪' },
-  { value: 'CrossFit', label: 'CrossFit WOD', color: 'bg-orange-500', icon: '🏋️' },
-  { value: 'Sprints', label: 'Sprint Training', color: 'bg-green-500', icon: '⚡' },
-  { value: 'Long Run', label: 'Long Distance Run', color: 'bg-emerald-500', icon: '🏃' },
-  { value: 'Rest', label: 'Rest Day', color: 'bg-gray-400', icon: '😴' }
-];
-
-const days = [
-  { index: 0, name: 'Sunday', nameHe: 'א', short: 'Sun' },
-  { index: 1, name: 'Monday', nameHe: 'ב', short: 'Mon' },
-  { index: 2, name: 'Tuesday', nameHe: 'ג', short: 'Tue' },
-  { index: 3, name: 'Wednesday', nameHe: 'ד', short: 'Wed' },
-  { index: 4, name: 'Thursday', nameHe: 'ה', short: 'Thu' },
-  { index: 5, name: 'Friday', nameHe: 'ו', short: 'Fri' },
-  { index: 6, name: 'Saturday', nameHe: 'ש', short: 'Sat' }
-];
+// Use shared constants
+const workoutTypes = WORKOUT_TYPES;
+const days = DAYS_CONFIG;
 
 export default function ScheduleConfig({ currentSchedule, onSave, onClose }) {
   const [schedule, setSchedule] = useState(() => {

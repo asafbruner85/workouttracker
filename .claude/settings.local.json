@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build:*)",
+      "Bash(vercel:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(npm search @modelcontextprotocol/server-github)",
+      "Bash(npm search mcp github server)",
+      "Bash(claude mcp remove:*)",
+      "Bash(claude mcp get:*)",
+      "Bash(gh repo list:*)",
+      "mcp__github__search_repositories",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
+    ]
+  }
+}

@@ -7,7 +7,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     // setupFiles: './tests/setup.js', // Temporarily disabled
-    include: ['tests/**/*.test.{js,jsx}'],
+    include: ['tests/**/*.test.{js,jsx}', 'tests/hooks/**/*.test.{js,jsx}'],
     exclude: ['tests/**/*.spec.{js,jsx}', 'node_modules/**'],
     coverage: {
       provider: 'v8',

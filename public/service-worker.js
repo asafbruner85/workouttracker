@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 
 // Increment this version whenever you deploy changes
-const APP_VERSION = 'v1.0.0';
+const APP_VERSION = 'v1.2.1';
 const CACHE_NAME = `workout-tracker-${APP_VERSION}`;
 const urlsToCache = [
   '/',

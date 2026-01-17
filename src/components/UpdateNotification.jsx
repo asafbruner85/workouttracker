@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
-const APP_VERSION = 'v1.0.0'; // Match this with service-worker.js
+const APP_VERSION = 'v1.2.0'; // Match this with service-worker.js and WorkoutTracker.jsx
 
 export default function UpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false);
