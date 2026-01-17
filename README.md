@@ -1,157 +1,109 @@
 # Workout Tracker
 
-A personal workout tracking application for managing strength training, CrossFit, and running workouts.
+A personal workout tracking PWA for managing strength training, CrossFit, and running workouts.
+
+**Live App**: https://workouttracker-six.vercel.app
 
 ## Features
 
-- 📅 Weekly workout calendar view
-- 💪 Track strength training exercises with weights, reps, and sets
-- 🏃 Log running workouts (sprints and long runs)
-- 🏋️ Record CrossFit WOD sessions
-- 📊 Weekly statistics and progress tracking
-- 📝 Workout history with detailed logs
-- ✏️ Editable workout program
-- 🔒 Password-protected access
-- 💾 Automatic data persistence in browser localStorage
+- Weekly, monthly, and daily calendar views
+- Track strength training exercises with weights, reps, and sets
+- Log running workouts (sprints and long runs)
+- Record CrossFit WOD sessions
+- Progress dashboard with charts and statistics
+- Personal records (PR) tracking
+- Workout history with detailed logs
+- Edit workout program per day or week
+- Password-protected access
+- PWA - installable on mobile devices
+- Works offline with automatic sync
+- Cloud backup with Supabase (optional)
 
 ## Tech Stack
 
-- React 18
-- Vite
+- React 18 + Vite
 - Tailwind CSS
+- Recharts (analytics)
 - Lucide React Icons
-- LocalStorage API
+- Supabase (optional cloud sync)
+- Vitest + Playwright (testing)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v16 or higher)
-- npm or yarn
+- npm
 
 ### Installation
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/asafbruner/WorkoutTracker.git
 cd workouttracker
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+Open http://localhost:5173 in your browser.
+
+Default password: `asaf2024`
 
 ## Building for Production
 
-To create a production build:
-
 ```bash
 npm run build
+npm run preview  # Preview production build
 ```
 
-The built files will be in the `dist` directory.
+## Deployment
 
-To preview the production build:
+### Vercel (Recommended)
 
 ```bash
-npm run preview
+npm i -g vercel
+vercel --prod
 ```
 
-## Deploying to GitHub Pages
+### GitHub Pages
 
-1. Update the `base` property in `vite.config.js` to match your repository name:
-```javascript
-base: '/your-repo-name/',
-```
-
-2. Build and deploy:
 ```bash
 npm run deploy
 ```
 
-This will build the app and push it to the `gh-pages` branch of your repository.
-
-3. Configure GitHub Pages:
-   - Go to your repository settings
-   - Navigate to "Pages" section
-   - Set source to "Deploy from a branch"
-   - Select `gh-pages` branch
-   - Save
-
-Your app will be available at: `https://yourusername.github.io/your-repo-name/`
-
-## Alternative Deployment Options
-
-### Netlify
-
-1. Build your app:
-```bash
-npm run build
-```
-
-2. Deploy the `dist` folder to Netlify:
-   - Drag and drop the `dist` folder to Netlify
-   - Or connect your repository and set build command to `npm run build` and publish directory to `dist`
-
-### Vercel
-
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. Deploy:
-```bash
-vercel
-```
-
-Follow the prompts to deploy your application.
-
 ## Configuration
 
-### Changing the Password
+### Environment Variables
 
-Edit the password in `src/WorkoutTracker.jsx`:
+Create a `.env` file:
 
-```javascript
-const PASSWORD_HASH = 'your-new-password';
+```bash
+VITE_SUPABASE_URL=        # Optional: Supabase project URL
+VITE_SUPABASE_ANON_KEY=   # Optional: Supabase anon key
+VITE_PASSWORD_HASH=       # Optional: Custom SHA-256 password hash
 ```
 
-**Important:** For production use, implement proper authentication with password hashing.
+### Cloud Sync Setup
 
-### Customizing Workouts
-
-The default workout program is defined in `src/WorkoutTracker.jsx` in the `defaultWorkouts` object. Modify this to customize your weekly routine.
-
-## Data Storage
-
-All workout data is stored in the browser's localStorage. This means:
-- Data persists across browser sessions
-- Data is stored locally on your device
-- Clearing browser data will delete all workout logs
-- Data is not synced across devices
+See [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) for Supabase configuration.
 
 ## Usage
 
 1. **Login**: Enter the password to access the app
-2. **View Weekly Schedule**: See your workout plan for the current week
-3. **Log Workouts**: Click "Log Workout" on any day to record your session
-4. **Track Progress**: View your workout history and weekly statistics
-5. **Edit Program**: Click "Edit" to modify your workout program
-6. **Navigate Weeks**: Use the arrow buttons to view past or future weeks
+2. **View Schedule**: See your workout plan in daily, weekly, or monthly view
+3. **Log Workouts**: Click "Log Workout" to record your session
+4. **Edit Workouts**: Click "Edit Workout" to customize exercises
+5. **Track Progress**: Click "Progress" to view analytics and PRs
+6. **Navigate**: Use arrows to view past or future weeks
+7. **History**: Click history icon to see all logged workouts
+
+## Testing
+
+```bash
+npm run test          # Unit tests
+npm run test:e2e      # E2E tests
+npm run test:coverage # Coverage report
+```
 
 ## License
 
 This project is private and for personal use.
-
-## Support
-
-For issues or questions, please open an issue in the repository.
