@@ -18,7 +18,8 @@
       "Bash(git add:*)",
       "Bash(git reset:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nv1.2.1: Major refactor + comprehensive test coverage\n\n- Refactor WorkoutTracker.jsx from 1,847 lines to ~170 lines\n- Extract components: calendar, header, modals, stats, history\n- Create custom hooks: useAuthentication, useCalendarNavigation, useModalState, useWorkoutData\n- Add shared constants and utilities\n- Improve test coverage from 6% to 33% with 288 tests\n- Add component tests for DayCard, LoginScreen, ModalContainer, etc.\n- Add hook tests for all custom hooks\n- Add utility tests for dateUtils and workoutUtils\n- Add Vercel deployment configuration\n- Add CLAUDE.md with project documentation\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

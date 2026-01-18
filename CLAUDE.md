@@ -4,7 +4,7 @@ Personal fitness tracking PWA for managing strength training, CrossFit, and runn
 
 **Live App**: https://workouttracker-six.vercel.app
 **Current Version**: v1.2.1
-**Last Updated**: 2026-01-17
+**Last Updated**: 2026-01-18
 
 ## IMPORTANT: Keep This File Updated
 
@@ -214,3 +214,20 @@ WorkoutTracker.jsx was refactored from 1,847 lines to ~170 lines by:
 - **Calendar**: Pure presentation components, data from props
 - **Header**: Actions passed as callbacks
 - **Hooks**: All business logic and state management
+
+### Modal State Pattern
+
+Modals receive computed props from parent (e.g., `workout` computed from `editDate`). Initialize local state as `null` and sync via `useEffect`:
+
+```javascript
+// CORRECT - handles prop timing
+const [localWorkout, setLocalWorkout] = useState(null);
+
+useEffect(() => {
+  if (isOpen && workout) {
+    setLocalWorkout(workout);
+  }
+}, [isOpen, workout]);
+
+if (!isOpen || !workout || !localWorkout) return null;
+```

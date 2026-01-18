@@ -14,7 +14,7 @@ export default function EditWorkoutModal({
   onSave,
   onReset
 }) {
-  const [localWorkout, setLocalWorkout] = useState(workout);
+  const [localWorkout, setLocalWorkout] = useState(null);
   const [applyToFuture, setApplyToFuture] = useState(false);
 
   // Reset local state when modal opens with new workout
@@ -25,7 +25,7 @@ export default function EditWorkoutModal({
     }
   }, [isOpen, workout]);
 
-  if (!isOpen || !date || !workout) return null;
+  if (!isOpen || !date || !workout || !localWorkout) return null;
 
   const handleSave = async () => {
     await onSave(date, localWorkout, applyToFuture);
