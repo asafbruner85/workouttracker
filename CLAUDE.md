@@ -3,7 +3,7 @@
 Personal fitness tracking PWA for managing strength training, CrossFit, and running workouts.
 
 **Live App**: https://workouttracker-six.vercel.app
-**Current Version**: v1.2.1
+**Current Version**: v1.2.2
 **Last Updated**: 2026-01-18
 
 ## IMPORTANT: Keep This File Updated
