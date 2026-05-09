@@ -67,7 +67,7 @@ export default function DayCard({
       {/* Exercises Preview */}
       {!isPadding && (
         <div className={`p-4 space-y-2 ${viewMode === 'daily' ? '' : 'flex-1'}`}>
-          <WorkoutPreview workout={workout} viewMode={viewMode} />
+          <WorkoutPreview workout={workout} log={log} viewMode={viewMode} />
         </div>
       )}
 

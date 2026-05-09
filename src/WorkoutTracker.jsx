@@ -24,7 +24,7 @@ import { useAuthentication, useWorkoutData, useCalendarNavigation, useModalState
 import { registerServiceWorker, setupInstallPrompt } from './utils/pwa';
 
 // App version - must match service worker version and UpdateNotification.jsx
-const APP_VERSION = 'v1.2.8';
+const APP_VERSION = 'v1.2.9';
 
 export default function WorkoutTracker() {
   // Custom hooks for state management
@@ -99,6 +99,7 @@ export default function WorkoutTracker() {
         onUpdateLog={workoutData.updateLog}
         onToggleCompletion={workoutData.toggleCompletion}
         saveTimeoutRef={workoutData.saveTimeoutRef}
+        saveStatus={workoutData.saveStatus}
       />
 
       {/* Edit Workout Modal */}

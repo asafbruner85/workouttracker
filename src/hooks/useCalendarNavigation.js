@@ -13,7 +13,14 @@ import {
 
 export function useCalendarNavigation() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [viewMode, setViewMode] = useState('weekly'); // 'daily', 'weekly', 'monthly'
+  const [viewMode, setViewMode] = useState(
+    () => localStorage.getItem('viewMode') || 'weekly'
+  );
+
+  const setViewModeAndPersist = useCallback((mode) => {
+    localStorage.setItem('viewMode', mode);
+    setViewMode(mode);
+  }, []);
 
   const navigate = useCallback((direction) => {
     setCurrentWeek(prev => navigateDate(prev, direction, viewMode));
@@ -41,7 +48,7 @@ export function useCalendarNavigation() {
     currentWeek,
     setCurrentWeek,
     viewMode,
-    setViewMode,
+    setViewMode: setViewModeAndPersist,
     navigate,
     weekDates,
     currentWeekKey,

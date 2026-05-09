@@ -3,9 +3,60 @@
  * Uses useRef for form data to avoid re-renders during typing
  */
 
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { Check, X, Dumbbell, Activity, Timer, Save } from 'lucide-react';
 import { formatDateKey } from '../../utils/dateUtils';
+
+// Weight stepper component — avoids typing for incremental weight changes
+function WeightStepper({ exerciseIdx, dateIsoString, defaultValue, onUpdate, onWeightLogged }) {
+  const inputRef = useRef(null);
+
+  const applyStep = (delta) => {
+    const current = parseFloat(inputRef.current?.value) || 0;
+    const rounded = Math.round((current + delta) * 2) / 2; // snap to 0.5kg
+    const newVal = String(Math.max(0, rounded));
+    if (inputRef.current) inputRef.current.value = newVal;
+    onUpdate(exerciseIdx, 'weight', newVal);
+    onWeightLogged?.();
+  };
+
+  return (
+    <div className="flex-1 min-w-0">
+      <label className="text-xs text-gray-400 block mb-1">Weight (kg)</label>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onPointerDown={(e) => { e.preventDefault(); applyStep(-2.5); }}
+          className="w-10 h-10 rounded-lg bg-gray-600 hover:bg-gray-500 active:bg-gray-400 text-white font-bold text-xl flex items-center justify-center shrink-0 touch-manipulation select-none"
+          aria-label="Decrease weight by 2.5kg"
+        >
+          −
+        </button>
+        <input
+          ref={inputRef}
+          key={`weight-${exerciseIdx}-${dateIsoString}`}
+          type="number"
+          inputMode="decimal"
+          step="2.5"
+          min="0"
+          defaultValue={defaultValue}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => { onUpdate(exerciseIdx, 'weight', e.target.value); onWeightLogged?.(); }}
+          className="flex-1 min-w-0 px-2 py-2.5 bg-gray-600 rounded-lg text-white text-base font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+          placeholder="kg"
+        />
+        <button
+          type="button"
+          onPointerDown={(e) => { e.preventDefault(); applyStep(2.5); }}
+          className="w-10 h-10 rounded-lg bg-gray-600 hover:bg-gray-500 active:bg-gray-400 text-white font-bold text-xl flex items-center justify-center shrink-0 touch-manipulation select-none"
+          aria-label="Increase weight by 2.5kg"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function LogModal({
   isOpen,
@@ -15,7 +66,8 @@ export default function LogModal({
   onClose,
   onUpdateLog,
   onToggleCompletion,
-  saveTimeoutRef
+  saveTimeoutRef,
+  saveStatus
 }) {
   // Store form data in ref to avoid re-renders
   const formDataRef = useRef({
@@ -26,6 +78,9 @@ export default function LogModal({
 
   // Track if form has been initialized
   const initializedRef = useRef(false);
+
+  // Live progress counter for strength exercises
+  const [loggedWeightCount, setLoggedWeightCount] = useState(0);
 
   // Initialize form data from log when modal opens
   useEffect(() => {
@@ -44,6 +99,16 @@ export default function LogModal({
       }
     };
   }, [isOpen, date, log]);
+
+  // Sync progress counter when modal opens or date changes
+  useEffect(() => {
+    if (isOpen && workout?.typeEn === 'Strength') {
+      const count = Object.values(log?.exercises || {}).filter(e => e?.weight && e.weight !== '').length;
+      setLoggedWeightCount(count);
+    } else if (!isOpen) {
+      setLoggedWeightCount(0);
+    }
+  }, [isOpen, date, workout, log]);
 
   const updateExerciseLog = useCallback((exerciseIndex, field, value) => {
     if (!formDataRef.current.exercises[exerciseIndex]) {
@@ -137,40 +202,78 @@ export default function LogModal({
     onClose();
   }, [date, onUpdateLog, onClose, saveTimeoutRef]);
 
+  // Update progress counter when a weight field changes
+  const handleWeightLogged = useCallback(() => {
+    if (workout?.typeEn !== 'Strength' || !workout?.exercises) return;
+    const count = workout.exercises.filter(
+      (_, idx) => formDataRef.current.exercises[idx]?.weight &&
+                  formDataRef.current.exercises[idx].weight !== ''
+    ).length;
+    setLoggedWeightCount(count);
+  }, [workout]);
+
   if (!isOpen || !date || !workout || !Array.isArray(workout.exercises)) return null;
 
   const isStrength = workout.typeEn === 'Strength';
   const isRunning = workout.typeEn === 'Sprints' || workout.typeEn === 'Long Run';
   const isCrossfit = workout.typeEn === 'CrossFit';
   const dateIsoString = date.toISOString();
+  const totalExercises = isStrength ? workout.exercises.length : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-700 my-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className="bg-gray-800 w-full max-w-2xl rounded-t-2xl sm:rounded-2xl h-[92dvh] sm:max-h-[90vh] sm:h-auto overflow-hidden flex flex-col border border-gray-700">
+
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-2 pb-0 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-gray-600" />
+        </div>
+
         {/* Modal Header */}
-        <div className={`${workout.color} px-6 py-4 rounded-t-2xl sticky top-0 z-10`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white">{workout.typeEn}</h2>
-              <p className="text-white/80">
+        <div className={`${workout.color} px-4 py-3 sm:px-6 sm:py-4`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{workout.typeEn}</h2>
+              <p className="text-sm text-white/80">
                 {date.toLocaleDateString('en-IL', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
             </div>
+
+            {/* Progress counter — Strength only */}
+            {isStrength && (
+              <div className="flex flex-col items-center shrink-0 mx-1">
+                <span className="text-sm font-bold text-white tabular-nums leading-none">
+                  {loggedWeightCount}/{totalExercises}
+                </span>
+                <span className="text-[10px] text-white/60 leading-none mt-0.5">exercises</span>
+              </div>
+            )}
+
+            {/* Save status badge */}
+            {saveStatus && (
+              <span className="text-xs text-white/90 bg-white/20 rounded-full px-2 py-0.5 shrink-0 hidden sm:inline">
+                {saveStatus}
+              </span>
+            )}
+
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20"
+              className="text-white/80 hover:text-white w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/20 shrink-0"
+              aria-label="Close"
             >
-              ×
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+
           {/* Completion Status */}
           <div className="flex gap-3">
             <button
               onClick={() => onToggleCompletion(date, true)}
-              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all ${
+              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-base transition-all ${
                 log.completed === true
                   ? 'bg-green-600 text-white shadow-lg shadow-green-600/30'
                   : 'bg-gray-700 text-gray-400 hover:bg-green-600/30 hover:text-green-400'
@@ -181,7 +284,7 @@ export default function LogModal({
             </button>
             <button
               onClick={() => onToggleCompletion(date, false)}
-              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all ${
+              className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold text-base transition-all ${
                 log.completed === false
                   ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
                   : 'bg-gray-700 text-gray-400 hover:bg-red-600/30 hover:text-red-400'
@@ -194,77 +297,80 @@ export default function LogModal({
 
           {/* Strength Logging */}
           {isStrength && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Dumbbell className="w-5 h-5 text-blue-400" />
                 Strength Exercises
               </h3>
 
               {workout.exercises.map((exercise, idx) => (
-                <div key={idx} className="bg-gray-700/50 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold text-white">{exercise.name}</h4>
-                      <p className="text-sm text-gray-400">{exercise.sets}</p>
+                <div key={idx} className="bg-gray-700/50 rounded-xl p-4 space-y-3 border border-gray-700/50">
+                  {/* Exercise name + target */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-white text-base leading-tight">{exercise.name}</h4>
+                      <p className="text-sm text-gray-400 mt-0.5">{exercise.sets}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       {exercise.targetWeight && (
-                        <p className="text-xs text-blue-400">Target: {exercise.targetWeight}kg</p>
+                        <span className="text-xs bg-blue-500/20 text-blue-300 rounded px-1.5 py-0.5 font-medium">
+                          target {exercise.targetWeight}kg
+                        </span>
                       )}
                       {exercise.targetReps && (
-                        <p className="text-xs text-blue-400">Target: {exercise.targetReps} reps</p>
+                        <span className="text-xs bg-blue-500/20 text-blue-300 rounded px-1.5 py-0.5 font-medium">
+                          target {exercise.targetReps} reps
+                        </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-400 block mb-1">Weight (kg)</label>
-                      <input
-                        key={`weight-${idx}-${dateIsoString}`}
-                        type="number"
-                        defaultValue={log.exercises[idx]?.weight || ''}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => updateExerciseLog(idx, 'weight', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="kg"
-                      />
-                    </div>
-                    <div>
+                  {/* Input row: stepper + reps + sets */}
+                  <div className="flex items-end gap-2">
+                    <WeightStepper
+                      exerciseIdx={idx}
+                      dateIsoString={dateIsoString}
+                      defaultValue={log.exercises[idx]?.weight || ''}
+                      onUpdate={updateExerciseLog}
+                      onWeightLogged={handleWeightLogged}
+                    />
+                    <div className="w-20 shrink-0">
                       <label className="text-xs text-gray-400 block mb-1">Reps</label>
                       <input
                         key={`reps-${idx}-${dateIsoString}`}
                         type="text"
+                        inputMode="text"
                         defaultValue={log.exercises[idx]?.reps || ''}
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => updateExerciseLog(idx, 'reps', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                         placeholder="5/5/5"
                       />
                     </div>
-                    <div>
-                      <label className="text-xs text-gray-400 block mb-1">Sets Done</label>
+                    <div className="w-16 shrink-0">
+                      <label className="text-xs text-gray-400 block mb-1">Sets</label>
                       <input
                         key={`sets-${idx}-${dateIsoString}`}
                         type="number"
+                        inputMode="numeric"
                         defaultValue={log.exercises[idx]?.sets || ''}
                         onChange={(e) => updateExerciseLog(idx, 'sets', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                         placeholder="3"
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Notes</label>
-                    <input
-                      key={`notes-${idx}-${dateIsoString}`}
-                      type="text"
-                      defaultValue={log.exercises[idx]?.notes || ''}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) => updateExerciseLog(idx, 'notes', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="How did it feel? Any issues?"
-                    />
-                  </div>
+                  {/* Per-exercise notes */}
+                  <input
+                    key={`exnotes-${idx}-${dateIsoString}`}
+                    type="text"
+                    defaultValue={log.exercises[idx]?.notes || ''}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateExerciseLog(idx, 'notes', e.target.value)}
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="How did it feel? Any issues?"
+                  />
                 </div>
               ))}
             </div>
@@ -285,9 +391,11 @@ export default function LogModal({
                     <input
                       key={`duration-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       defaultValue={log.running?.duration || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('duration', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="30"
                     />
                   </div>
@@ -296,11 +404,12 @@ export default function LogModal({
                     <input
                       key={`distance-${dateIsoString}`}
                       type="number"
+                      inputMode="decimal"
                       step="0.1"
                       defaultValue={log.running?.distance || ''}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('distance', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="5.0"
                     />
                   </div>
@@ -313,8 +422,9 @@ export default function LogModal({
                       key={`pace-${dateIsoString}`}
                       type="text"
                       defaultValue={log.running?.pace || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('pace', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="5:50"
                     />
                   </div>
@@ -323,9 +433,11 @@ export default function LogModal({
                     <input
                       key={`heartRate-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       defaultValue={log.running?.heartRate || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('heartRate', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="125"
                     />
                   </div>
@@ -337,11 +449,13 @@ export default function LogModal({
                     <input
                       key={`rpe-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       min="1"
                       max="10"
                       defaultValue={log.running?.rpe || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('rpe', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="4"
                     />
                   </div>
@@ -350,9 +464,11 @@ export default function LogModal({
                     <input
                       key={`calories-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       defaultValue={log.running?.calories || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('calories', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="300"
                     />
                   </div>
@@ -364,8 +480,9 @@ export default function LogModal({
                     key={`route-${dateIsoString}`}
                     type="text"
                     defaultValue={log.running?.route || ''}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => updateRunningLog('route', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Park, Treadmill, etc."
                   />
                 </div>
@@ -388,9 +505,11 @@ export default function LogModal({
                     <input
                       key={`sprintsCompleted-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       defaultValue={log.running?.sprintsCompleted || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('sprintsCompleted', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="8"
                     />
                   </div>
@@ -399,9 +518,11 @@ export default function LogModal({
                     <input
                       key={`sprintDistance-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       defaultValue={log.running?.sprintDistance || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('sprintDistance', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="150"
                     />
                   </div>
@@ -413,8 +534,9 @@ export default function LogModal({
                     key={`sprintTimes-${dateIsoString}`}
                     type="text"
                     defaultValue={log.running?.sprintTimes || ''}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => updateRunningLog('sprintTimes', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="22s, 23s, 22s, 24s, 23s, 24s, 25s, 26s"
                   />
                 </div>
@@ -426,8 +548,9 @@ export default function LogModal({
                       key={`bestTime-${dateIsoString}`}
                       type="text"
                       defaultValue={log.running?.bestTime || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('bestTime', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="21s"
                     />
                   </div>
@@ -437,8 +560,9 @@ export default function LogModal({
                       key={`avgTime-${dateIsoString}`}
                       type="text"
                       defaultValue={log.running?.avgTime || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('avgTime', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="23s"
                     />
                   </div>
@@ -451,8 +575,9 @@ export default function LogModal({
                       key={`restTime-${dateIsoString}`}
                       type="text"
                       defaultValue={log.running?.restTime || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('restTime', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="90-120"
                     />
                   </div>
@@ -461,11 +586,13 @@ export default function LogModal({
                     <input
                       key={`sprint-rpe-${dateIsoString}`}
                       type="number"
+                      inputMode="numeric"
                       min="1"
                       max="10"
                       defaultValue={log.running?.rpe || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateRunningLog('rpe', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                       placeholder="9"
                     />
                   </div>
@@ -476,9 +603,11 @@ export default function LogModal({
                   <input
                     key={`warmupDuration-${dateIsoString}`}
                     type="number"
+                    inputMode="numeric"
                     defaultValue={log.running?.warmupDuration || ''}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => updateRunningLog('warmupDuration', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="10"
                   />
                 </div>
@@ -489,8 +618,9 @@ export default function LogModal({
                     key={`sprint-route-${dateIsoString}`}
                     type="text"
                     defaultValue={log.running?.route || ''}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => updateRunningLog('route', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="Track, field, etc."
                   />
                 </div>
@@ -513,8 +643,9 @@ export default function LogModal({
                     key={`wodName-${dateIsoString}`}
                     type="text"
                     defaultValue={log.exercises[0]?.wodName || ''}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => updateExerciseLog(0, 'wodName', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="e.g., Fran, AMRAP 20..."
                   />
                 </div>
@@ -526,8 +657,9 @@ export default function LogModal({
                       key={`score-${dateIsoString}`}
                       type="text"
                       defaultValue={log.exercises[0]?.score || ''}
+                      onFocus={(e) => e.target.select()}
                       onChange={(e) => updateExerciseLog(0, 'score', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="12:30 / 5 rounds"
                     />
                   </div>
@@ -537,7 +669,7 @@ export default function LogModal({
                       key={`rx-${dateIsoString}`}
                       defaultValue={log.exercises[0]?.rx || ''}
                       onChange={(e) => updateExerciseLog(0, 'rx', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-2.5 bg-gray-600 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">Select...</option>
                       <option value="Rx">Rx</option>
@@ -558,20 +690,24 @@ export default function LogModal({
               defaultValue={log.notes || ''}
               onFocus={(e) => e.target.select()}
               onChange={(e) => updateGeneralNotes(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+              className="w-full px-4 py-3 bg-gray-700 rounded-xl text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
               placeholder="How did the workout feel? Any PRs? Issues?"
             />
           </div>
 
-          {/* Save Button */}
+        </div>
+
+        {/* Sticky save bar */}
+        <div className="shrink-0 px-4 pb-6 pt-3 sm:px-6 border-t border-gray-700/50 bg-gray-800">
           <button
             onClick={handleClose}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-base"
           >
             <Save className="w-5 h-5" />
             Save & Close
           </button>
         </div>
+
       </div>
     </div>
   );
