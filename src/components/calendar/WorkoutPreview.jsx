@@ -28,7 +28,7 @@ export default function WorkoutPreview({ workout, log, viewMode }) {
           return (
             <div key={exIndex} className="text-sm">
               <div className="font-medium text-white">{exercise.name}</div>
-              {exercise.sets && <div className="text-gray-400 text-xs">{exercise.sets}</div>}
+              {exercise.sets && <div className="text-gray-400 text-xs whitespace-pre-line">{exercise.sets}</div>}
               {(exercise.targetWeight || exercise.targetReps) && (
                 <div className="text-xs text-blue-400">
                   Target: {exercise.targetWeight && `${exercise.targetWeight}kg`}
