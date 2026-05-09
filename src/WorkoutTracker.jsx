@@ -24,7 +24,7 @@ import { useAuthentication, useWorkoutData, useCalendarNavigation, useModalState
 import { registerServiceWorker, setupInstallPrompt } from './utils/pwa';
 
 // App version - must match service worker version and UpdateNotification.jsx
-const APP_VERSION = 'v1.2.10';
+const APP_VERSION = 'v1.2.11';
 
 export default function WorkoutTracker() {
   // Custom hooks for state management

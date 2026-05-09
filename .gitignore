@@ -39,3 +39,6 @@ nul
 .gstack/
 
 .env*.local
+
+# SugarWOD local cache (contains gym data, not for git)
+public/wod-cache.json

@@ -13,7 +13,8 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "fetch-wod": "node scripts/fetch-wod.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.3",

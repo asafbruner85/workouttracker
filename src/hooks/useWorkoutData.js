@@ -16,6 +16,7 @@ export function useWorkoutData() {
   const [workoutProgram, setWorkoutProgram] = useState(DEFAULT_WORKOUTS);
   const [weeklySchedules, setWeeklySchedules] = useState({});
   const [workoutLogs, setWorkoutLogs] = useState({});
+  const [wodCache, setWodCache] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   const saveTimeoutRef = useRef(null);
@@ -58,6 +59,12 @@ export function useWorkoutData() {
       setLoading(false);
     };
     loadData();
+
+    // Load WOD cache (written by `npm run fetch-wod`, gitignored)
+    fetch('/wod-cache.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setWodCache(data); })
+      .catch(() => {}); // silently ignore if not present
   }, []);
 
   // Save helper
@@ -72,10 +79,29 @@ export function useWorkoutData() {
     }
   }, []);
 
-  // Get workout for specific date
+  // Get workout for specific date, enriched with WOD cache data for CrossFit days
   const getWorkoutForDate = useCallback((date) => {
-    return getWorkoutForDateUtil(date, weeklySchedules, workoutProgram);
-  }, [weeklySchedules, workoutProgram]);
+    const workout = getWorkoutForDateUtil(date, weeklySchedules, workoutProgram);
+
+    if (workout.typeEn === 'CrossFit' && wodCache) {
+      const dateKey = formatDateKey(date);
+      const day = wodCache.days?.[dateKey];
+      if (day?.wod) {
+        const exercises = [];
+        if (day.strength) {
+          exercises.push({ name: 'Strength', sets: day.strength, notes: '' });
+        }
+        exercises.push({
+          name: day.wodTitle || 'CrossFit WOD',
+          sets: day.wod.text,
+          notes: day.wod.level ? `Scaling ${day.wod.level}` : ''
+        });
+        return { ...workout, exercises };
+      }
+    }
+
+    return workout;
+  }, [weeklySchedules, workoutProgram, wodCache]);
 
   // Get log for specific date
   const getDateLog = useCallback((date) => {
