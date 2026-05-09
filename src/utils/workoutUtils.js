@@ -4,9 +4,30 @@
 
 import { formatDateKey, getWeekKey } from './dateUtils';
 
+// Default fallback workout to prevent crashes
+const FALLBACK_WORKOUT = {
+  type: 'מנוחה',
+  typeEn: 'Rest',
+  color: 'bg-slate-600',
+  exercises: []
+};
+
+/**
+ * Validates that a workout object has required properties
+ * @param {Object} workout - Workout to validate
+ * @returns {boolean} True if workout is valid
+ */
+function isValidWorkout(workout) {
+  return workout &&
+         typeof workout === 'object' &&
+         workout.typeEn &&
+         Array.isArray(workout.exercises);
+}
+
 /**
  * Get workout for a specific date
  * Checks week-specific schedule first, then falls back to default program
+ * Always returns a valid workout object with exercises array
  * @param {Date} date - The date to get workout for
  * @param {Object} weeklySchedules - Week-specific schedule overrides
  * @param {Object} workoutProgram - Default workout program
@@ -18,11 +39,23 @@ export function getWorkoutForDate(date, weeklySchedules, workoutProgram) {
 
   // Check if there's a custom schedule for this week
   if (weeklySchedules[weekKey] && weeklySchedules[weekKey][dayIndex]) {
-    return weeklySchedules[weekKey][dayIndex];
+    const weeklyWorkout = weeklySchedules[weekKey][dayIndex];
+    if (isValidWorkout(weeklyWorkout)) {
+      return weeklyWorkout;
+    }
+    // Invalid weekly schedule data - fall through to default
+    console.warn(`Invalid weekly schedule for ${weekKey}/${dayIndex}, using default`);
   }
 
   // Fall back to default program
-  return workoutProgram[dayIndex];
+  const defaultWorkout = workoutProgram[dayIndex];
+  if (isValidWorkout(defaultWorkout)) {
+    return defaultWorkout;
+  }
+
+  // Ultimate fallback if even default program is corrupted
+  console.error(`Invalid workout program for day ${dayIndex}, using fallback`);
+  return FALLBACK_WORKOUT;
 }
 
 /**

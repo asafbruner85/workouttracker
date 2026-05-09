@@ -143,7 +143,7 @@ describe('useWorkoutData', () => {
     it('should return weekly schedule override when available', async () => {
       const storedSchedules = {
         '2024-03-10': {
-          0: { typeEn: 'Custom', type: 'מותאם' }
+          0: { typeEn: 'Custom', type: 'מותאם', exercises: [] }
         }
       };
       mockStorage.get.mockImplementation((key) => {

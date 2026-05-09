@@ -12,19 +12,19 @@ import {
 
 describe('Workout Utilities', () => {
   const mockWorkoutProgram = {
-    0: { typeEn: 'Rest', type: 'יום מנוחה', color: 'bg-gray-600' },
-    1: { typeEn: 'Strength', type: 'אימון כוח', color: 'bg-indigo-600' },
-    2: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600' },
-    3: { typeEn: 'Sprints', type: 'ספרינטים', color: 'bg-rose-600' },
-    4: { typeEn: 'Strength', type: 'אימון כוח', color: 'bg-indigo-600' },
-    5: { typeEn: 'Long Run', type: 'ריצה ארוכה', color: 'bg-teal-600' },
-    6: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600' }
+    0: { typeEn: 'Rest', type: 'יום מנוחה', color: 'bg-gray-600', exercises: [] },
+    1: { typeEn: 'Strength', type: 'אימון כוח', color: 'bg-indigo-600', exercises: [] },
+    2: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600', exercises: [] },
+    3: { typeEn: 'Sprints', type: 'ספרינטים', color: 'bg-rose-600', exercises: [] },
+    4: { typeEn: 'Strength', type: 'אימון כוח', color: 'bg-indigo-600', exercises: [] },
+    5: { typeEn: 'Long Run', type: 'ריצה ארוכה', color: 'bg-teal-600', exercises: [] },
+    6: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600', exercises: [] }
   };
 
   const mockWeeklySchedules = {
     '2024-03-10': {
-      1: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600' }, // Override Monday
-      3: { typeEn: 'Rest', type: 'יום מנוחה', color: 'bg-gray-600' } // Override Wednesday
+      1: { typeEn: 'CrossFit', type: 'קרוספיט', color: 'bg-amber-600', exercises: [] }, // Override Monday
+      3: { typeEn: 'Rest', type: 'יום מנוחה', color: 'bg-gray-600', exercises: [] } // Override Wednesday
     }
   };
 

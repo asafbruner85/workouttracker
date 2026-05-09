@@ -156,10 +156,16 @@ export function useWorkoutData() {
       const existingWorkout = getWorkoutForDate(weekDates[day]);
       const newWorkoutType = WORKOUT_TYPE_CONFIGS[workoutType];
 
-      if (existingWorkout && existingWorkout.typeEn === workoutType) {
+      if (existingWorkout && existingWorkout.typeEn === workoutType && Array.isArray(existingWorkout.exercises)) {
+        // Keep existing workout only if it has valid exercises array
         weekSchedule[day] = existingWorkout;
-      } else {
+      } else if (newWorkoutType && Array.isArray(newWorkoutType.exercises)) {
+        // Use config workout only if it's valid
         weekSchedule[day] = { ...newWorkoutType };
+      } else {
+        // Fallback to Rest day config if something went wrong
+        weekSchedule[day] = { ...WORKOUT_TYPE_CONFIGS['Rest'] };
+        console.warn(`Invalid workout config for ${workoutType}, falling back to Rest`);
       }
     });
 

@@ -1,4 +1,4 @@
-import { supabase, isSupabaseReady, markSupabaseWorking, markSupabaseNotWorking } from './supabaseClient'
+import { supabase, isSupabaseConfigured, isSupabaseReady, markSupabaseWorking, markSupabaseNotWorking } from './supabaseClient'
 
 // Hybrid storage implementation
 // Uses Supabase when configured, falls back to localStorage

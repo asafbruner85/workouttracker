@@ -91,7 +91,7 @@ test.describe('Production Deployment Tests', () => {
     await page.waitForTimeout(2000);
     
     // Filter out expected warnings (Supabase table check, CDN cache issues, etc.)
-    const realErrors = consoleErrors.filter(error => 
+    const realErrors = consoleErrors.filter(error =>
       !error.includes('Using localStorage only') &&
       !error.includes('Supabase table') &&
       !error.includes('SUPABASE_SETUP.md') &&
@@ -99,8 +99,22 @@ test.describe('Production Deployment Tests', () => {
       !error.includes('favicon') &&
       !error.includes('icon') &&
       !error.includes('Failed to load resource') &&
-      !error.includes('net::ERR')
+      !error.includes('net::ERR') &&
+      !error.includes('Invalid weekly schedule') &&
+      !error.includes('Invalid workout program')
     );
+
+    // Check for critical errors that would cause blank screen
+    const criticalErrors = consoleErrors.filter(error =>
+      error.includes('Cannot read properties of undefined') ||
+      error.includes('is not a function') ||
+      error.includes('is not defined')
+    );
+
+    if (criticalErrors.length > 0) {
+      console.log('🚨 CRITICAL ERRORS (would cause blank screen):');
+      criticalErrors.forEach(error => console.log(`  - ${error}`));
+    }
     
     // Report results
     console.log('\n📊 Test Results:');

@@ -5,7 +5,8 @@
 import React from 'react';
 
 export default function WorkoutPreview({ workout, viewMode }) {
-  if (workout.typeEn === 'Rest') {
+  // Guard against missing or invalid exercises array
+  if (workout.typeEn === 'Rest' || !workout.exercises || !Array.isArray(workout.exercises)) {
     return null;
   }
 

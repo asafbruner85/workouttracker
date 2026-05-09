@@ -19,13 +19,14 @@ export default function EditWorkoutModal({
 
   // Reset local state when modal opens with new workout
   React.useEffect(() => {
-    if (isOpen && workout) {
+    if (isOpen && workout && Array.isArray(workout.exercises)) {
       setLocalWorkout(workout);
       setApplyToFuture(false);
     }
   }, [isOpen, workout]);
 
-  if (!isOpen || !date || !workout || !localWorkout) return null;
+  // Guard against missing or invalid data
+  if (!isOpen || !date || !workout || !localWorkout || !Array.isArray(localWorkout.exercises)) return null;
 
   const handleSave = async () => {
     await onSave(date, localWorkout, applyToFuture);
@@ -117,22 +118,38 @@ export default function EditWorkoutModal({
 
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Exercise Name</label>
-                  <input
-                    type="text"
+                  <textarea
                     value={exercise.name}
-                    onChange={(e) => updateExerciseInWorkout(idx, 'name', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      updateExerciseInWorkout(idx, 'name', e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    rows={1}
+                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
                     placeholder="e.g., Back Squats"
                   />
                 </div>
 
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Sets / Reps Description</label>
-                  <input
-                    type="text"
+                  <textarea
                     value={exercise.sets}
-                    onChange={(e) => updateExerciseInWorkout(idx, 'sets', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      updateExerciseInWorkout(idx, 'sets', e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    rows={1}
+                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
                     placeholder="e.g., 3 sets: 5 reps"
                   />
                 </div>
@@ -164,8 +181,16 @@ export default function EditWorkoutModal({
                   <label className="text-xs text-gray-400 block mb-1">Notes</label>
                   <textarea
                     value={exercise.notes || ''}
-                    onChange={(e) => updateExerciseInWorkout(idx, 'notes', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[60px]"
+                    onChange={(e) => {
+                      updateExerciseInWorkout(idx, 'notes', e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.max(60, e.target.scrollHeight) + 'px';
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.max(60, e.target.scrollHeight) + 'px';
+                    }}
+                    className="w-full px-3 py-2 bg-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[60px] resize-none overflow-hidden"
                     placeholder="Additional notes about this exercise..."
                   />
                 </div>

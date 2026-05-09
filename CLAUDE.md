@@ -3,8 +3,8 @@
 Personal fitness tracking PWA for managing strength training, CrossFit, and running workouts.
 
 **Live App**: https://workouttracker-six.vercel.app
-**Current Version**: v1.2.2
-**Last Updated**: 2026-01-18
+**Current Version**: v1.2.8
+**Last Updated**: 2026-05-09
 
 ## IMPORTANT: Keep This File Updated
 
@@ -48,6 +48,7 @@ src/
 ├── storage.js                   # Hybrid storage (Supabase + localStorage)
 ├── supabaseClient.js            # Supabase configuration
 ├── components/
+│   ├── ErrorBoundary.jsx        # Crash recovery UI (prevents blank screen)
 │   ├── LoginScreen.jsx          # Password authentication
 │   ├── ProgressDashboard.jsx    # Analytics with Recharts
 │   ├── ScheduleConfig.jsx       # Weekly schedule editor

@@ -137,7 +137,7 @@ export default function LogModal({
     onClose();
   }, [date, onUpdateLog, onClose, saveTimeoutRef]);
 
-  if (!isOpen || !date || !workout) return null;
+  if (!isOpen || !date || !workout || !Array.isArray(workout.exercises)) return null;
 
   const isStrength = workout.typeEn === 'Strength';
   const isRunning = workout.typeEn === 'Sprints' || workout.typeEn === 'Long Run';
