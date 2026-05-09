@@ -4,6 +4,21 @@
 
 import { formatDateKey, getWeekKey } from './dateUtils';
 
+// Canonical colors by typeEn — single source of truth to prevent stale stored colors
+const CANONICAL_COLORS = {
+  'Strength': 'bg-indigo-600',
+  'CrossFit': 'bg-amber-600',
+  'Sprints':  'bg-lime-600',
+  'Long Run': 'bg-teal-600',
+  'Rest':     'bg-slate-600',
+};
+
+function resolveColor(workout) {
+  if (CANONICAL_COLORS[workout.typeEn]) return CANONICAL_COLORS[workout.typeEn];
+  if (isRunningWorkout(workout)) return 'bg-teal-600';
+  return workout.color || 'bg-slate-600';
+}
+
 // Default fallback workout to prevent crashes
 const FALLBACK_WORKOUT = {
   type: 'מנוחה',
@@ -41,16 +56,15 @@ export function getWorkoutForDate(date, weeklySchedules, workoutProgram) {
   if (weeklySchedules[weekKey] && weeklySchedules[weekKey][dayIndex]) {
     const weeklyWorkout = weeklySchedules[weekKey][dayIndex];
     if (isValidWorkout(weeklyWorkout)) {
-      return weeklyWorkout;
+      return { ...weeklyWorkout, color: resolveColor(weeklyWorkout) };
     }
-    // Invalid weekly schedule data - fall through to default
     console.warn(`Invalid weekly schedule for ${weekKey}/${dayIndex}, using default`);
   }
 
   // Fall back to default program
   const defaultWorkout = workoutProgram[dayIndex];
   if (isValidWorkout(defaultWorkout)) {
-    return defaultWorkout;
+    return { ...defaultWorkout, color: resolveColor(defaultWorkout) };
   }
 
   // Ultimate fallback if even default program is corrupted
