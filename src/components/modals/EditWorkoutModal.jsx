@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { Settings, Trash2, Plus, X, Save } from 'lucide-react';
+import { Settings, Trash2, Plus, X, Save, ChevronUp, ChevronDown } from 'lucide-react';
 import { ENGLISH_DAYS } from '../../constants/dates';
 
 export default function EditWorkoutModal({
@@ -64,6 +64,14 @@ export default function EditWorkoutModal({
     });
   };
 
+  const moveExercise = (index, direction) => {
+    const exercises = [...localWorkout.exercises];
+    const target = index + direction;
+    if (target < 0 || target >= exercises.length) return;
+    [exercises[index], exercises[target]] = [exercises[target], exercises[index]];
+    setLocalWorkout({ ...localWorkout, exercises });
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-700 my-4">
@@ -107,13 +115,31 @@ export default function EditWorkoutModal({
               <div key={idx} className="bg-gray-700/50 rounded-xl p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <h4 className="font-semibold text-white">Exercise {idx + 1}</h4>
-                  <button
-                    onClick={() => removeExerciseFromWorkout(idx)}
-                    className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Remove
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => moveExercise(idx, -1)}
+                      disabled={idx === 0}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-25 disabled:cursor-default transition-colors"
+                      title="Move up"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => moveExercise(idx, 1)}
+                      disabled={idx === localWorkout.exercises.length - 1}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-25 disabled:cursor-default transition-colors"
+                      title="Move down"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => removeExerciseFromWorkout(idx)}
+                      className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-gray-600 flex items-center gap-1 text-sm transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  </div>
                 </div>
 
                 <div>
